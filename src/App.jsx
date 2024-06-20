@@ -1,74 +1,56 @@
-
-import './App.css'
+import './App.css';
 import ContactForm from './components/ContactForm/ContactForm';
 import SearchBox from './components/SearchBox/SearchBox';
 import ContactList from './components/ContactList/ContactList';
-import { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { useEffect } from 'react';
-
-
-
-
-
+import { selectContacts, addContact, deleteContact, setContacts } from './redux/contactsSlice';
+import { selectNameFilter, changeFilter } from './redux/filtersSlice';
+import { Provider } from 'react-redux';
+import store from './redux/store';
 
 function App() {
-
-  const [contact, setContact] = useState(() => {
-    const storedContacts = JSON.parse(localStorage.getItem('contacts'));
-    return storedContacts ? storedContacts : [
-      { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
-      { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-      { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
-      { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
-    ];
-  });
-
- 
-  const [filter, setFilter] = useState('');
-
+  const contacts = useSelector(selectContacts);
+  const filter = useSelector(selectNameFilter);
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    const storageContact = JSON.parse(localStorage.getItem('contacts'));
-    if (storageContact) {
-      setContact(storageContact);
+    const storedContacts = JSON.parse(localStorage.getItem('contacts'));
+    if (storedContacts) {
+      dispatch(setContacts(storedContacts));
     }
-  }, []);
+  }, [dispatch]);
 
+  useEffect(() => {
+    localStorage.setItem('contacts', JSON.stringify(contacts));
+  }, [contacts]);
 
-useEffect(() => {
-    localStorage.setItem('contacts', JSON.stringify(contact));
-  }, [contact]);
+  const handleAddContact = (newContact) => {
+    dispatch(addContact(newContact));
+  };
 
-   
-  const addContact = (newContact) => {
-    console.log(newContact);
-    setContact((prevContact) => {
-      return [...prevContact, newContact]
-    })
-  }
+  const handleDeleteContact = (id) => {
+    dispatch(deleteContact(id));
+  };
 
+  const handleFilterChange = (filterValue) => {
+    dispatch(changeFilter(filterValue));
+  };
 
-  const deleteContact = (id) => {
-    setContact((prevContact) => {
-
-      return prevContact.filter((contact) => contact.id !== id)
-    })
-  }
-
-  const filteredContacts = contact.filter((contact) =>
+  const filteredContacts = contacts.filter(contact =>
     contact.name.toLowerCase().includes(filter.toLowerCase())
   );
 
-
-
   return (
-    <div className='container'>
-      <h1>Phonebook</h1>
-      <ContactForm addContact={addContact} />
-      <SearchBox value={filter} onFilter={setFilter} />
-      <ContactList contact={filteredContacts} deleteContact={deleteContact} />
-    </div>
-  )
+    <Provider store={store}>
+      <div className="container">
+        <h1>Phonebook</h1>
+        <ContactForm addContact={handleAddContact} />
+        <SearchBox value={filter} onFilter={handleFilterChange} />
+        <ContactList contact={filteredContacts} deleteContact={handleDeleteContact} />
+      </div>
+    </Provider>
+  );
 }
 
-export default App
+export default App;
