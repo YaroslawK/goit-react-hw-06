@@ -3,27 +3,17 @@ import ContactForm from './components/ContactForm/ContactForm';
 import SearchBox from './components/SearchBox/SearchBox';
 import ContactList from './components/ContactList/ContactList';
 import { useSelector, useDispatch } from 'react-redux';
-import { useEffect } from 'react';
-import { selectContacts, addContact, deleteContact, setContacts } from './redux/contactsSlice';
+import { selectContacts, addContact, deleteContact } from './redux/contactsSlice';
 import { selectNameFilter, changeFilter } from './redux/filtersSlice';
 import { Provider } from 'react-redux';
-import store from './redux/store';
+import { PersistGate } from 'redux-persist/integration/react';
+import { store, persistor } from './redux/store';
+
 
 function App() {
   const contacts = useSelector(selectContacts);
   const filter = useSelector(selectNameFilter);
   const dispatch = useDispatch();
-
-  useEffect(() => {
-    const storedContacts = JSON.parse(localStorage.getItem('contacts'));
-    if (storedContacts) {
-      dispatch(setContacts(storedContacts));
-    }
-  }, [dispatch]);
-
-  useEffect(() => {
-    localStorage.setItem('contacts', JSON.stringify(contacts));
-  }, [contacts]);
 
   const handleAddContact = (newContact) => {
     dispatch(addContact(newContact));
@@ -43,12 +33,14 @@ function App() {
 
   return (
     <Provider store={store}>
-      <div className="container">
-        <h1>Phonebook</h1>
-        <ContactForm addContact={handleAddContact} />
-        <SearchBox value={filter} onFilter={handleFilterChange} />
-        <ContactList contact={filteredContacts} deleteContact={handleDeleteContact} />
-      </div>
+      <PersistGate loading={null} persistor={persistor}>
+        <div className="container">
+          <h1>Phonebook</h1>
+          <ContactForm addContact={handleAddContact} />
+          <SearchBox value={filter} onFilter={handleFilterChange} />
+          <ContactList contact={filteredContacts} deleteContact={handleDeleteContact} />
+        </div>
+      </PersistGate>
     </Provider>
   );
 }
